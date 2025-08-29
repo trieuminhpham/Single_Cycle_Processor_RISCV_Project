@@ -8,7 +8,7 @@ module imem (
 
     // Load dữ liệu từ file hex vào RAM
     initial begin
-        $readmemh("D:/EDABK/Trainning/RISC-V/Single_Cycle_Processor_t/code/riscvtest.txt", RAM);
+        $readmemh("D:/EDABK/Trainning/RISC-V/Single_Cycle_Processor_Last_Version/riscvtest.txt", RAM);
     end
 
     // Đọc dữ liệu theo địa chỉ word-aligned

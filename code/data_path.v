@@ -4,7 +4,7 @@ module datapath (
     input [2:0] ALUControl,
     input [31:0] ReadData, Instr,
     output [31:0] WriteData,
-	 output reg [31:0] ALUResult,
+    output reg [31:0] ALUResult,
     output reg [31:0] PC,
     output Zero
 );
@@ -17,46 +17,59 @@ assign Zero = (ALUResult == 0);
 assign PCTarget = PC + ImmExt;
 assign PCPlus4 = PC + 4;
 
-// Instance register file
-register_file res (.clk(clk), .A1(Instr[19:15]), .A2(Instr[24:20]), .A3(Instr[11:7]), .WD3(Result), .RegWrite(RegWrite), .RD1(SrcA), .RD2(WriteData));
+// Instance register file (thêm rst)
+register_file res (
+    .clk(clk), 
+    .rst(rst),
+    .A1(Instr[19:15]), 
+    .A2(Instr[24:20]), 
+    .A3(Instr[11:7]), 
+    .WD3(Result), 
+    .RegWrite(RegWrite), 
+    .RD1(SrcA), 
+    .RD2(WriteData)
+);
 
-// Extend
-always @(ImmSrc or Instr) begin
+// Imm Extend
+always @(ImmSrc) begin
     case (ImmSrc)
-        2'b00: ImmExt = {{20{Instr[31]}}, Instr[31:20]}; // I-Type: Imm[11:0] = Instr[31:20]
-        2'b01: ImmExt = {{20{Instr[31]}}, Instr[31:25], Instr[11:7]}; // S-Type: Imm = {Instr[31:25], Instr[11:7]}
-        2'b10: ImmExt = {{20{Instr[31]}}, Instr[7], Instr[30:25], Instr[11:8], 1'b0}; // B-Type: Imm = {Instr[31], Instr[7], Instr[30:25], Instr[11:8], 0}
-        2'b11: ImmExt = {{12{Instr[31]}}, Instr[19:12], Instr[20], Instr[30:21], 1'b0}; // J-type: Imm = {Instr[31], Instr[19:12], Instr[20], Instr[30:21], 0}
+        2'b00: ImmExt = {{20{Instr[31]}}, Instr[31:20]};                           // I-Type: Imm[11:0] = Instr[31:20]
+        2'b01: ImmExt = {{20{Instr[31]}}, Instr[31:25], Instr[11:7]};             // S-Type: Imm = {Instr[31:25], Instr[11:7]}
+        2'b10: ImmExt = {{20{Instr[31]}}, Instr[7], Instr[30:25], Instr[11:8],1'b0}; // B-Type: Imm = {Instr[31], Instr[7], Instr[30:25], Instr[11:8], 0}
+        2'b11: ImmExt = {{12{Instr[31]}}, Instr[19:12], Instr[20], Instr[30:21],1'b0}; // J-type: Imm = {Instr[31], Instr[19:12], Instr[20], Instr[30:21], 0}
         default: ImmExt = 32'b0;
     endcase
 end
 
 // ALU
-always @(ALUControl or SrcA or SrcB) begin
+always @(ALUControl) begin
     case (ALUControl)
         3'b000: ALUResult = SrcA + SrcB;
         3'b001: ALUResult = SrcA - SrcB;
-        3'b101: ALUResult = (SrcA < SrcB) ? 32'b1 : 32'b0; 
+        3'b101: ALUResult = ($signed(SrcA) < $signed(SrcB)) ? 32'b1 : 32'b0;
         3'b011: ALUResult = SrcA | SrcB;
         3'b010: ALUResult = SrcA & SrcB;
         default: ALUResult = 32'b0;
     endcase
 end
 
-// Mux 2:1 cho RD2 va Imm
+// Mux cho ALU input B
 assign SrcB = (ALUSrc) ? ImmExt : WriteData;
 
-//Mux 2:1 cho PCNext
-assign PCNext = (PCSrc) ? PCPlus4 : PCTarget;
+// Mux cho PCNext
+assign PCNext = (PCSrc) ? PCTarget : PCPlus4;
 
-// Mux 3:1 cho Result
-assign Result = ResultSrc[1] ? PCPlus4 : ResultSrc[0] ? ReadData : ALUResult;
+// Mux cho Result (ghi vào register file)
+assign Result = (ResultSrc == 2'b10) ? PCPlus4 :
+                (ResultSrc == 2'b01) ? ReadData : 
+                ALUResult;
 
-// Tinh PC ke tiep
+// Update PC
 always @(posedge clk or posedge rst) begin
     if (rst)
         PC <= 32'b0;
     else
         PC <= PCNext;
 end
+
 endmodule

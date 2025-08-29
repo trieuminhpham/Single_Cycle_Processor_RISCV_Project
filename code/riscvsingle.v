@@ -28,10 +28,10 @@ module riscvsingle (
         .ALUControl(ALUControl)
     );
 
-    // Datapath
+    // Datapath (thêm rst)
     datapath dp(
         .clk       (clk),
-        .rst     (rst),
+        .rst       (rst),
         .ResultSrc (ResultSrc),
         .PCSrc     (PCSrc),
         .ALUSrc    (ALUSrc),
@@ -40,7 +40,7 @@ module riscvsingle (
         .ALUControl(ALUControl),
         .Zero      (Zero),
         .PC        (PC),
-        .Instr(Instr),
+        .Instr     (Instr),
         .ALUResult (ALUResult),
         .WriteData (WriteData),
         .ReadData  (ReadData)
