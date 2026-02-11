@@ -1,4 +1,4 @@
-##Single Cycle RISC-V RV32I Processor
+## Single Cycle RISC-V RV32I Processor
 
 A 32-bit Single Cycle Processor implementation based on the RISC-V (RV32I) Instruction Set Architecture (ISA). This project is designed for educational purposes, focusing on understanding the fundamental stages of computer architecture: Fetch, Decode, Execute, Memory, and Writeback.
 ## Features
